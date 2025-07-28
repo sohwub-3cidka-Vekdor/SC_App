@@ -1,10 +1,9 @@
-# 📦 Imports
 import streamlit as st
 import pandas as pd
 import numpy as np
 from itertools import combinations
 
-# ✅ Paste this below your imports 👇
+# Function to balance any number of players into 2 or 3 teams
 def balance_any_number_of_players(df):
     players = df["name"].tolist()
     n = len(players)
@@ -57,24 +56,43 @@ def balance_any_number_of_players(df):
 
     return best_option, best_diff
 
-# 📌 3. Start the Streamlit app UI
+
+# === Streamlit App ===
 st.title("⚽ SC Brésil - Team Creator")
 
+# Load player data
 df = pd.read_csv("players.csv")
+players = df["name"].tolist()
 
-selected_players = st.multiselect(
-    "✅ Select today's players:",
-    df["name"].tolist()
-)
+# Initialize session state for selected players
+if "selected_players" not in st.session_state:
+    st.session_state.selected_players = []
 
-selected_df = df[df["name"].isin(selected_players)]
+st.write("✅ Select today's players by clicking the buttons:")
 
-if not selected_df.empty:
+# Display player buttons in 5 columns
+cols = st.columns(5)
+for i, player in enumerate(players):
+    col = cols[i % 5]
+
+    if player in st.session_state.selected_players:
+        # Show selected player button with a checkmark; clicking removes from selection
+        if col.button(f"✅ {player}", key=player):
+            st.session_state.selected_players.remove(player)
+    else:
+        # Show unselected player button; clicking adds to selection
+        if col.button(player, key=player):
+            st.session_state.selected_players.append(player)
+
+# Show selected players table
+if st.session_state.selected_players:
     st.subheader("🧍 Selected Players")
+    selected_df = df[df["name"].isin(st.session_state.selected_players)]
     st.dataframe(selected_df)
 
+    # Button to create balanced teams
     if st.button("Create Balanced Teams"):
-        if len(selected_players) < 2:
+        if len(st.session_state.selected_players) < 2:
             st.warning("Select at least 2 players.")
         else:
             best_teams, balance_score = balance_any_number_of_players(selected_df)
@@ -84,10 +102,10 @@ if not selected_df.empty:
             else:
                 st.success(f"✅ Best match found! Balance Score: {round(balance_score)}")
 
-                cols = st.columns(len(best_teams))
+                team_cols = st.columns(len(best_teams))
 
                 for i, team in enumerate(best_teams):
-                    with cols[i]:
+                    with team_cols[i]:
                         st.subheader(f"Team {i+1} ({len(team)} players)")
                         st.write(selected_df[selected_df["name"].isin(team)])
 else:
