@@ -17,11 +17,9 @@ with tab1:
     if df.empty:
         st.warning("No players found. Please add new players first.")
     else:
-        # Select player to edit
         selected_player = st.selectbox("Select a player to edit:", df["name"].tolist())
         player_data = df[df["name"] == selected_player].iloc[0]
 
-        # Editable name
         new_name = st.text_input("Change Player Name", value=selected_player, key="edit_name")
 
         updated_stats = {}
@@ -31,7 +29,6 @@ with tab1:
             )
 
         if st.button("💾 Save Changes"):
-            # Check for name conflict if renaming
             if new_name != selected_player and new_name in df["name"].values:
                 st.error("⚠️ Another player with this name already exists.")
             elif new_name.strip() == "":
@@ -45,6 +42,23 @@ with tab1:
                 st.experimental_rerun()
 
 with tab2:
+    new_player_name = st.text_input("Player Name")
+    new_stats = {}
+    for col in df.columns[1:]:
+        new_stats[col] = st.slider(f"{col.capitalize()}", 1, 5, 3, key=col + "_new")
+
+    if st.button("➕ Add Player"):
+        if new_player_name.strip() == "" or new_player_name in df["name"].values:
+            st.error("⚠️ Enter a unique player name.")
+        else:
+            new_row = {"name": new_player_name}
+            new_row.update(new_stats)
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            df.to_csv("players.csv", index=False)
+            st.success(f"✅ Added {new_player_name}!")
+            st.experimental_rerun()
+
+with tab3:
     if df.empty:
         st.warning("No players to delete.")
     else:
