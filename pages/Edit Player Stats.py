@@ -45,31 +45,6 @@ with tab1:
                 st.experimental_rerun()
 
 with tab2:
-    # Use session state to clear inputs after adding
-    if "new_player_name" not in st.session_state:
-        st.session_state.new_player_name = ""
-    new_player_name = st.text_input("Player Name", value=st.session_state.new_player_name, key="new_name")
-
-    new_stats = {}
-    for col in df.columns[1:]:
-        new_stats[col] = st.slider(f"{col.capitalize()}", 1, 5, 3, key=col + "_new")
-
-    if st.button("➕ Add Player"):
-        if new_player_name.strip() == "" or new_player_name in df["name"].values:
-            st.error("⚠️ Enter a unique player name.")
-        else:
-            new_row = {"name": new_player_name}
-            new_row.update(new_stats)
-            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-            df.to_csv("players.csv", index=False)
-            st.success(f"✅ Added {new_player_name}!")
-            # Clear input after adding
-            st.session_state.new_player_name = ""
-            for col in df.columns[1:]:
-                st.session_state.pop(col + "_new", None)
-            st.experimental_rerun()
-
-with tab3:
     if df.empty:
         st.warning("No players to delete.")
     else:
