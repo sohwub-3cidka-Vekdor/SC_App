@@ -31,6 +31,7 @@ for stat in df.columns[1:]:
 if st.button("💾 Save Changes"):
     # Update dataframe with new stats
     for stat, value in updated_stats.items():
+        # Ensure the value matches the column's data type
         df.loc[df["name"] == selected_player, stat] = value
     df.to_csv("players.csv", index=False)
     st.success(f"✅ {selected_player}'s stats updated!")
