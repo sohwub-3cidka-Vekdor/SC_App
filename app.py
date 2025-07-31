@@ -94,11 +94,11 @@ elif page == "Edit Players":
     st.title("✏️ Edit Player Stats")
 
     name_list = players_df["Name"].tolist()
-    selected = st.selectbox("Select a player to edit or add a new name below:", [""] + name_list)
-    new_name = st.text_input("New Player Name:", "" if selected else "")
+    selected_player = st.selectbox("Select a player to edit:", name_list)
+    new_name = st.text_input("New Player Name:", "" if selected_player else "")
 
-    if selected:
-        player_data = players_df[players_df["Name"] == selected].iloc[0]
+    if selected_player:
+        player_data = players_df[players_df["Name"] == selected_player].iloc[0]
     else:
         player_data = pd.Series({"Technicality": 3, "Strength": 3, "Control": 3, "Finish": 3, "Stamina": 3})
 
@@ -109,7 +109,7 @@ elif page == "Edit Players":
     stamina = st.slider("Stamina", 1, 5, int(player_data["Stamina"]))
 
     if st.button("💾 Save Player"):
-        name = selected if selected else new_name
+        name = selected_player if selected_player else new_name
         if not name:
             st.error("Please enter a name.")
         else:
