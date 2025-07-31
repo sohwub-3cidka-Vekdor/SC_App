@@ -1,115 +1,131 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from itertools import combinations
+import random
+import os
 
-# Function to balance any number of players into 2 or 3 teams
-def balance_any_number_of_players(df):
-    players = df["name"].tolist()
+# Load or initialize player data
+DATA_FILE = "players.csv"
+if os.path.exists(DATA_FILE):
+    players_df = pd.read_csv(DATA_FILE)
+else:
+    players_df = pd.DataFrame(columns=["Name", "Technicality", "Strength", "Control", "Finish", "Stamina"])
+
+st.set_page_config(page_title="SC Brésil - Team Creator", layout="wide")
+
+# --- Sidebar Navigation ---
+page = st.sidebar.selectbox("Choose a page", ["Team Creator", "Edit Players"])
+
+# --- Shared Functions ---
+def calculate_team_score(team, df):
+    stats = ["Technicality", "Strength", "Control", "Finish", "Stamina"]
+    team_df = df[df["Name"].isin(team)]
+    return team_df[stats].sum().sum()
+
+def generate_team_combinations(players):
     n = len(players)
-    player_stats = {p: df[df["name"] == p].iloc[0, 1:].values for p in players}
+    if n < 2:
+        return []
 
-    best_option = None
-    best_diff = float("inf")
+    combinations = []
+    if n == 2:
+        combinations.append([players[:1], players[1:]])
+    elif n == 3:
+        combinations.append([players[:2], players[2:]])
+    elif n == 4:
+        combinations.append([players[:2], players[2:]])
+    elif n == 5:
+        combinations.append([players[:3], players[3:]])
+    elif n % 2 == 0:
+        combinations.append([players[:n//2], players[n//2:]])
+    elif n % 3 == 0:
+        third = n // 3
+        combinations.append([players[:third], players[third:2*third], players[2*third:]])
+    elif n >= 6:
+        a = n // 3
+        combinations.append([players[:a], players[a:2*a], players[2*a:]])
+    return combinations
 
-    # Try 2-team splits
-    for i in range(1, n // 2 + 1):
-        for team1 in combinations(players, i):
-            team1 = set(team1)
-            team2 = set(players) - team1
-            if len(team1) == 0 or len(team2) == 0:
-                continue
+def find_best_teams(selected_players, df):
+    best_combination = None
+    min_diff = float("inf")
+    combinations = generate_team_combinations(selected_players)
+    for teams in combinations:
+        scores = [calculate_team_score(team, df) for team in teams]
+        diff = max(scores) - min(scores)
+        if diff < min_diff:
+            min_diff = diff
+            best_combination = teams
+    return best_combination
 
-            stats1 = sum(player_stats[p] for p in team1)
-            stats2 = sum(player_stats[p] for p in team2)
-            diff = np.abs(stats1 - stats2).sum()
+# --- Team Creator Page ---
+if page == "Team Creator":
+    st.title("⚽ SC Brésil - Team Creator")
+    st.subheader("✅ Select today's players:")
 
-            if diff < best_diff:
-                best_diff = diff
-                best_option = [list(team1), list(team2)]
+    players = players_df["Name"].tolist()
+    if "selected_players" not in st.session_state:
+        st.session_state.selected_players = []
 
-    # Try 3-team splits
-    if n >= 6:
-        for i in range(1, n - 1):
-            for j in range(1, n - i):
-                k = n - i - j
-                if k < 1:
-                    continue
-
-                for team1 in combinations(players, i):
-                    remaining1 = list(set(players) - set(team1))
-                    for team2 in combinations(remaining1, j):
-                        team3 = list(set(remaining1) - set(team2))
-                        team1_stats = sum(player_stats[p] for p in team1)
-                        team2_stats = sum(player_stats[p] for p in team2)
-                        team3_stats = sum(player_stats[p] for p in team3)
-
-                        diff = (
-                            np.abs(team1_stats - team2_stats).sum() +
-                            np.abs(team2_stats - team3_stats).sum() +
-                            np.abs(team3_stats - team1_stats).sum()
-                        )
-
-                        if diff < best_diff:
-                            best_diff = diff
-                            best_option = [list(team1), list(team2), list(team3)]
-
-    return best_option, best_diff
-
-
-# === Streamlit App ===
-st.set_page_config(page_title="SC Brésil Team Creator", layout="wide")
-st.title("⚽ SC Brésil - Team Creator")
-
-# Load player data
-df = pd.read_csv("players.csv")
-players = df["name"].tolist()
-
-# Initialize session state
-if "selected_players" not in st.session_state:
-    st.session_state.selected_players = []
-
-st.write("✅ Select today's players:")
-
-# Dynamically set number of columns
-if len(players) <= 10:
+    # Mobile-friendly layout: display buttons in 3 columns
     num_cols = 3
-elif len(players) <= 20:
-    num_cols = 4
-else:
-    num_cols = 5
-
-cols = st.columns(num_cols)
-
-# Display buttons
-for i, player in enumerate(players):
-    col = cols[i % num_cols]
-    if player in st.session_state.selected_players:
-        if col.button(f"✅ {player}", key=player):
-            st.session_state.selected_players.remove(player)
-    else:
-        if col.button(player, key=player):
-            st.session_state.selected_players.append(player)
-
-# Show selected players
-if st.session_state.selected_players:
-    st.subheader("🧍 Selected Players")
-    selected_df = df[df["name"].isin(st.session_state.selected_players)]
-    st.dataframe(selected_df)
-
-    if st.button("Create Balanced Teams"):
-        if len(st.session_state.selected_players) < 2:
-            st.warning("Select at least 2 players.")
-        else:
-            best_teams, balance_score = balance_any_number_of_players(selected_df)
-            if best_teams is None:
-                st.error("❌ No valid team split found.")
+    cols = st.columns(num_cols)
+    for i, player in enumerate(players):
+        with cols[i % num_cols]:
+            if player in st.session_state.selected_players:
+                if st.button(f"✅ {player}", key=player):
+                    st.session_state.selected_players.remove(player)
             else:
-                st.success(f"✅ Best match found! Balance Score: {round(balance_score)}")
-                team_cols = st.columns(len(best_teams))
-                for i, team in enumerate(best_teams):
-                    with team_cols[i]:
-                        st.subheader(f"Team {i+1} ({len(team)} players)")
-                        st.write(selected_df[selected_df["name"].isin(team)])
-else:
-    st.info("Please select at least 2 players to form teams.")
+                if st.button(player, key=player):
+                    st.session_state.selected_players.append(player)
+
+    st.markdown("---")
+
+    if st.button("🎲 Generate Teams") and len(st.session_state.selected_players) >= 2:
+        best_teams = find_best_teams(st.session_state.selected_players, players_df)
+        if best_teams:
+            for i, team in enumerate(best_teams, start=1):
+                st.subheader(f"Team {i}")
+                st.write(team)
+    elif len(st.session_state.selected_players) < 2:
+        st.warning("Please select at least 2 players.")
+
+# --- Edit Players Page ---
+elif page == "Edit Players":
+    st.title("✏️ Edit Player Stats")
+
+    name_list = players_df["Name"].tolist()
+    selected = st.selectbox("Select a player to edit or add a new name below:", [""] + name_list)
+    new_name = st.text_input("New Player Name:", "" if selected else "")
+
+    if selected:
+        player_data = players_df[players_df["Name"] == selected].iloc[0]
+    else:
+        player_data = pd.Series({"Technicality": 3, "Strength": 3, "Control": 3, "Finish": 3, "Stamina": 3})
+
+    technicality = st.slider("Technicality", 1, 5, int(player_data["Technicality"]))
+    strength = st.slider("Strength", 1, 5, int(player_data["Strength"]))
+    control = st.slider("Control", 1, 5, int(player_data["Control"]))
+    finish = st.slider("Finish", 1, 5, int(player_data["Finish"]))
+    stamina = st.slider("Stamina", 1, 5, int(player_data["Stamina"]))
+
+    if st.button("💾 Save Player"):
+        name = selected if selected else new_name
+        if not name:
+            st.error("Please enter a name.")
+        else:
+            new_entry = pd.DataFrame([{
+                "Name": name,
+                "Technicality": technicality,
+                "Strength": strength,
+                "Control": control,
+                "Finish": finish,
+                "Stamina": stamina
+            }])
+            players_df = players_df[players_df["Name"] != name]
+            players_df = pd.concat([players_df, new_entry], ignore_index=True)
+            players_df.to_csv(DATA_FILE, index=False)
+            st.success(f"Stats saved for {name} ✅")
+
+    st.markdown("---")
+    if st.checkbox("📋 Show current player data"):
+        st.dataframe(players_df)
