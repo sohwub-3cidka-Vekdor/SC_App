@@ -18,7 +18,7 @@ page = st.sidebar.selectbox("Choose a page", ["Team Creator", "Edit Players"])
 # --- Shared Functions ---
 def calculate_team_score(team, df):
     stats = ["Technicality", "Strength", "Control", "Finish", "Stamina"]
-    team_df = df[df["Name"].isin(team)]
+    team_df = df[df["Name"].isin(team)]  # Ensure column name matches
     return team_df[stats].sum().sum()
 
 def generate_team_combinations(players):
@@ -62,7 +62,7 @@ if page == "Team Creator":
     st.title("⚽ SC Brésil - Team Creator")
     st.subheader("✅ Select today's players:")
 
-    players = players_df["Name"].tolist()
+    players = players_df["Name"].tolist()  # Ensure column name matches
     if "selected_players" not in st.session_state:
         st.session_state.selected_players = []
 
