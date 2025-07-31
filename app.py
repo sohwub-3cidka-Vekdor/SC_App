@@ -114,14 +114,14 @@ elif page == "Edit Players":
             st.error("Please enter a name.")
         else:
             new_entry = pd.DataFrame([{
-                "Name": name,
+                "Name": name,  # Ensure column name matches
                 "Technicality": technicality,
                 "Strength": strength,
                 "Control": control,
                 "Finish": finish,
                 "Stamina": stamina
             }])
-            players_df = players_df[players_df["Name"] != name]
+            players_df = players_df[players_df["Name"] != name]  # Ensure column name matches
             players_df = pd.concat([players_df, new_entry], ignore_index=True)
             players_df.to_csv(DATA_FILE, index=False)
             st.success(f"Stats saved for {name} ✅")
