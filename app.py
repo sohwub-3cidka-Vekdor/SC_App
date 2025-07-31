@@ -8,7 +8,7 @@ DATA_FILE = "players.csv"
 if os.path.exists(DATA_FILE):
     players_df = pd.read_csv(DATA_FILE)
 else:
-    players_df = pd.DataFrame(columns=["Name", "Technicality", "Strength", "Control", "Finish", "Stamina"])
+    players_df = pd.DataFrame(columns=["name", "technicality", "strength", "control", "finish", "stamina"])
 
 st.set_page_config(page_title="SC Brésil - Team Creator", layout="wide")
 
@@ -17,8 +17,8 @@ page = st.sidebar.selectbox("Choose a page", ["Team Creator", "Edit Players"])
 
 # --- Shared Functions ---
 def calculate_team_score(team, df):
-    stats = ["Technicality", "Strength", "Control", "Finish", "Stamina"]
-    team_df = df[df["Name"].isin(team)]  # Ensure column name matches
+    stats = [tTechnicality", "strength", "control", "finish", "stamina"]
+    team_df = df[df["name"].isin(team)]  # Ensure column name matches
     return team_df[stats].sum().sum()
 
 def generate_team_combinations(players):
