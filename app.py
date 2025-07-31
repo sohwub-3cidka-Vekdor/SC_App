@@ -17,8 +17,8 @@ page = st.sidebar.selectbox("Choose a page", ["Team Creator", "Edit Players"])
 
 # --- Shared Functions ---
 def calculate_team_score(team, df):
-    stats = [tTechnicality", "strength", "control", "finish", "stamina"]
-    team_df = df[df["name"].isin(team)]  # Ensure column name matches
+    stats = ["technicality", "strength", "control", "finish", "stamina"]
+    team_df = df[df["name"].isin(team)]
     return team_df[stats].sum().sum()
 
 def generate_team_combinations(players):
@@ -62,11 +62,10 @@ if page == "Team Creator":
     st.title("⚽ SC Brésil - Team Creator")
     st.subheader("✅ Select today's players:")
 
-    players = players_df["Name"].tolist()  # Ensure column name matches
+    players = players_df["name"].tolist()
     if "selected_players" not in st.session_state:
         st.session_state.selected_players = []
 
-    # Mobile-friendly layout: display buttons in 3 columns
     num_cols = 3
     cols = st.columns(num_cols)
     for i, player in enumerate(players):
@@ -93,20 +92,20 @@ if page == "Team Creator":
 elif page == "Edit Players":
     st.title("✏️ Edit Player Stats")
 
-    name_list = players_df["Name"].tolist()  # Ensure column name matches
+    name_list = players_df["name"].tolist()
     selected = st.selectbox("Select a player to edit or add a new name below:", [""] + name_list)
     new_name = st.text_input("New Player Name:", "" if selected else "")
 
     if selected:
-        player_data = players_df[players_df["Name"] == selected].iloc[0]
+        player_data = players_df[players_df["name"] == selected].iloc[0]
     else:
-        player_data = pd.Series({"Technicality": 3, "Strength": 3, "Control": 3, "Finish": 3, "Stamina": 3})
+        player_data = pd.Series({"technicality": 3, "strength": 3, "control": 3, "finish": 3, "stamina": 3})
 
-    technicality = st.slider("Technicality", 1, 5, int(player_data["Technicality"]))
-    strength = st.slider("Strength", 1, 5, int(player_data["Strength"]))
-    control = st.slider("Control", 1, 5, int(player_data["Control"]))
-    finish = st.slider("Finish", 1, 5, int(player_data["Finish"]))
-    stamina = st.slider("Stamina", 1, 5, int(player_data["Stamina"]))
+    technicality = st.slider("Technicality", 1, 5, int(player_data["technicality"]))
+    strength = st.slider("Strength", 1, 5, int(player_data["strength"]))
+    control = st.slider("Control", 1, 5, int(player_data["control"]))
+    finish = st.slider("Finish", 1, 5, int(player_data["finish"]))
+    stamina = st.slider("Stamina", 1, 5, int(player_data["stamina"]))
 
     if st.button("💾 Save Player"):
         name = selected if selected else new_name
@@ -114,14 +113,14 @@ elif page == "Edit Players":
             st.error("Please enter a name.")
         else:
             new_entry = pd.DataFrame([{
-                "Name": name,  # Ensure column name matches
-                "Technicality": technicality,
-                "Strength": strength,
-                "Control": control,
-                "Finish": finish,
-                "Stamina": stamina
+                "name": name,
+                "technicality": technicality,
+                "strength": strength,
+                "control": control,
+                "finish": finish,
+                "stamina": stamina
             }])
-            players_df = players_df[players_df["Name"] != name]  # Ensure column name matches
+            players_df = players_df[players_df["name"] != name]
             players_df = pd.concat([players_df, new_entry], ignore_index=True)
             players_df.to_csv(DATA_FILE, index=False)
             st.success(f"Stats saved for {name} ✅")
