@@ -30,11 +30,17 @@ with tab1:
             )
 
         if st.button("💾 Save Changes"):
-            df.loc[df["name"] == selected_player, "name"] = new_name
+            # Update stats first using the original name
             for stat, value in updated_stats.items():
-                df.loc[df["name"] == new_name, stat] = value
+                df.loc[df["name"] == selected_player, stat] = value
+
+            # Update the name after stats are updated
+            df.loc[df["name"] == selected_player, "name"] = new_name
+
+            # Save the updated DataFrame to the CSV file
             df.to_csv("players.csv", index=False)
             st.success(f"✅ {new_name}'s stats updated!")
+            st.experimental_rerun()
 
 with tab2:
     new_player_name = st.text_input("Player Name")
