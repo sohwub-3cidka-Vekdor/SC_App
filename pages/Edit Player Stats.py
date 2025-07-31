@@ -8,7 +8,7 @@ st.title("📝 Edit or Add Player Stats")
 if os.path.exists("players.csv"):
     df = pd.read_csv("players.csv")
 else:
-    df = pd.DataFrame(columns=["name", "tech", "strength", "control", "finish", "stamina"])
+    df = pd.DataFrame(columns=["name", "technicality", "strength", "control", "finish", "stamina"])
 
 # Tabs
 tab1, tab2, tab3 = st.tabs(["✏️ Edit Player", "➕ Add New Player", "🔥 Delete Player"])
@@ -20,24 +20,16 @@ with tab1:
         selected_player = st.selectbox("Select a player to edit:", df["name"].tolist())
         player_data = df[df["name"] == selected_player].iloc[0]
 
-        # Editable name
         new_name = st.text_input("Change Player Name", value=selected_player)
 
         updated_stats = {}
         for col in df.columns[1:]:
-            updated_stats[col] = st.slider(
-                f"{col.capitalize()}", 1, 5, int(player_data[col])
-            )
+            updated_stats[col] = st.slider(f"{col.capitalize()}", 1, 5, int(player_data[col]))
 
         if st.button("💾 Save Changes"):
-            # Update stats first using the original name
             for stat, value in updated_stats.items():
                 df.loc[df["name"] == selected_player, stat] = value
-
-            # Update the name after stats are updated
             df.loc[df["name"] == selected_player, "name"] = new_name
-
-            # Save the updated DataFrame to the CSV file
             df.to_csv("players.csv", index=False)
             st.success(f"✅ {new_name}'s stats updated!")
             st.experimental_rerun()
